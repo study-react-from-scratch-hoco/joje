@@ -17,6 +17,9 @@ const React = {
 // reRender 함수 추가
 const reRender = () => {
   console.log('reRender-ing :)');
+  const rootNode = document.getElementById('myapp'); 
+  // 이미 렌더링된 내용을 재설정/정리 
+  rootNode.innerHTML = ''; // 기존에 있던 걸 지우고 새로 넣음. 그래서 새 값이 적용 안됨.
   render(<App />, document.getElementById('myapp'));
 };
 
