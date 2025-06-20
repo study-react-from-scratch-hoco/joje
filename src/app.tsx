@@ -14,6 +14,12 @@ const React = {
   }
 };
 
+// reRender 함수 추가
+const reRender = () => {
+  console.log('reRender-ing :)');
+  render(<App />, document.getElementById('myapp'));
+};
+
 const render = (el, container) => {
   let domEl;
 
@@ -52,6 +58,8 @@ const useState = (initialState) => {
   const setState = (newState) => {
     state = newState;
     console.log('newState : ', newState)
+    // 상태가 변경되면 UI를 다시 렌더링 => 화면에 <App /> 를 렌더링 그래서 추가됨. 그래서 새 값이 렌더링 중에 삭제되고 UI 추가됨.
+    reRender();
   }
   console.log('state : ', state)
   return [state, setState]; 
