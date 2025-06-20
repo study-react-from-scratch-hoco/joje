@@ -24,6 +24,17 @@ npx tsc --init              # tsconfig.json 생성 (자료에서는 npx typescri
   }
   ```
 
+#### Scripts (package.json)
+```json
+{
+  "scripts": {
+    "dev": "tsc -w",        # TypeScript 컴파일러 watch 모드
+    "serve": "npx serve ."  # 로컬 웹 서버 실행
+  }
+}
+```
+
+
 3. 개발 서버 설정
 ```bash
 npm install -D serve         # 로컬 웹 서버 설치
@@ -41,13 +52,6 @@ npm run dev
 ```bash
 npm run serve
 ```
-
-#### 구현 단계
-- [x] 개발 환경 설정
-- [x] JSX 설정
-- [x] React.createElement 구현
-- [x] 가상 DOM 구현
-- [ ] 렌더러 구현
 
 #### React 핵심 개념: ReactElement vs ReactComponent
 
@@ -99,18 +103,13 @@ npm run serve
 | 로직 포함 | 불가능 | 가능 |
 | 예시 코드 | `<div>Hello</div>` | `<Title name="React" />` |
 
-## Scripts (package.json)
-```json
-{
-  "scripts": {
-    "dev": "tsc -w",        # TypeScript 컴파일러 watch 모드
-    "serve": "npx serve ."  # 로컬 웹 서버 실행
-  }
-}
-```
+#### Virtual DOM 렌더링 과정
+Virtual DOM을 실제 DOM으로 변환하는 과정을 구현
 
 #### 1주차 소감
-<!-- 구현 완료 후 작성 예정 -->
+Rect의 virtual Dom의 렌더링 원리를 깊이 있게 알수 있어서 좋았어요.
+특히 주로 만들어진 프레임워크나 라이브러리를 활용하는데 초점을 두는 편이라 어떻게 만들어진걸까. 작동원리를 깊게 생각하지 않는 편인데 리액트도 그렇지만 다른 라이브러리/프레임워크도 깊게 파면 재미있겠다는 생각이 들었어요.
+
 
 <!-- 
 ### 2주차: State Management & Hooks
