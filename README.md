@@ -110,11 +110,11 @@ Virtual DOM을 실제 DOM으로 변환하는 과정을 구현
 Rect의 virtual Dom의 렌더링 원리를 깊이 있게 알수 있어서 좋았어요.
 특히 주로 만들어진 프레임워크나 라이브러리를 활용하는데 초점을 두는 편이라 어떻게 만들어진걸까. 작동원리를 깊게 생각하지 않는 편인데 리액트도 그렇지만 다른 라이브러리/프레임워크도 깊게 파면 재미있겠다는 생각이 들었어요.
 
+### 2주차: State Management & Hooks
+- 참고 자료: https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-2-state-management-and-react-hooks-e771c5c06066
+
 
 <!-- 
-### 2주차: State Management & Hooks
-- 참고 자료: (추후 추가 예정)
-
 ### 3주차: React Suspense & Concurrent Mode
 - 참고 자료: (추후 추가 예정)
 
