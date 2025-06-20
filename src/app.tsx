@@ -16,7 +16,7 @@ const React = {
 
 // reRender 함수 추가
 const reRender = () => {
-  console.log('reRender-ing :)');
+  console.log('reRender-ing : ', myAppState);
   const rootNode = document.getElementById('myapp'); 
   // 이미 렌더링된 내용을 재설정/정리 
   rootNode.innerHTML = ''; // 기존에 있던 걸 지우고 새로 넣음. 그래서 새 값이 적용 안됨.
@@ -55,17 +55,19 @@ const render = (el, container) => {
   container.appendChild(domEl);
 };
 
+let myAppState; //기존의 state를 외부에서 선언
 const useState = (initialState) => { 
-  let state = initialState; 
-  console.log('initialState : ', initialState)
+  // let state = initialState; 
+  // console.log('initialState : ', initialState)
+  myAppState = myAppState || initialState; // 초기화 아니면 useState 값 넣어줌.
   const setState = (newState) => {
-    state = newState;
+    myAppState = newState;
     console.log('newState : ', newState)
     // 상태가 변경되면 UI를 다시 렌더링 => 화면에 <App /> 를 렌더링 그래서 추가됨. 그래서 새 값이 렌더링 중에 삭제되고 UI 추가됨.
     reRender();
   }
-  console.log('state : ', state)
-  return [state, setState]; 
+  console.log('myAppState : ', myAppState)
+  return [myAppState, setState]; 
 };
 
 // ---- 애플리케이션 ---
