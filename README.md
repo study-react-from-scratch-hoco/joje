@@ -44,10 +44,60 @@ npm run serve
 
 #### 구현 단계
 - [x] 개발 환경 설정
-- [ ] JSX 설정
-- [ ] React.createElement 구현
-- [ ] 가상 DOM 구현
+- [x] JSX 설정
+- [x] React.createElement 구현
+- [x] 가상 DOM 구현
 - [ ] 렌더러 구현
+
+#### React 핵심 개념: ReactElement vs ReactComponent
+
+##### ReactElement
+- HTML 태그를 직접 사용하는 기본적인 JSX 구조
+- 예시:
+  ```jsx
+  const App = (
+    <div>
+      <h2>Hello React!</h2>
+      <p>I am a paragraph</p>
+    </div>
+  );
+  ```
+- 특징:
+  - 단순한 HTML 구조 표현
+  - 정적인 콘텐츠
+  - 재사용이 어려움
+
+##### ReactComponent
+- props를 입력받아 ReactElement를 반환하는 함수
+- 예시:
+  ```jsx
+  const Title = (props) => (
+    <h2>안녕하세요 {props.name}!</h2>
+  );
+
+  const App = (
+    <div>
+      <Title name="React" />
+      <p>나는 단락이에요</p>
+    </div>
+  );
+  ```
+- 특징:
+  - 재사용 가능한 UI 조각
+  - props를 통한 동적 데이터 처리
+  - 로직과 UI의 캡슐화
+  - 컴포넌트 기반 개발의 기초
+
+##### ReactElement와 ReactComponent 비교
+| 특성 | ReactElement | ReactComponent |
+|------|--------------|----------------|
+| 형태 | 일반 객체 | 함수 |
+| 생성 방식 | JSX → createElement 호출 | 함수 정의 |
+| 입력 | 없음 | props |
+| 재사용성 | 낮음 | 높음 |
+| 동적 데이터 | 직접 값 사용 | props를 통해 전달 |
+| 로직 포함 | 불가능 | 가능 |
+| 예시 코드 | `<div>Hello</div>` | `<Title name="React" />` |
 
 ## Scripts (package.json)
 ```json
