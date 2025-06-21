@@ -383,5 +383,46 @@ const App = () => {
 
 이상적으로는 두 리소스를 병렬로 로드하면서도 모든 리소스가 준비될 때까지 기다렸다가 한 번에 렌더링하는 것이 더 효율적일 것입니다.
 
+##### 현재 구현의 순차적 처리 방식
+```mermaid
+sequenceDiagram
+    participant App
+    participant Photo1
+    participant Photo2
+    participant UI
+    
+    App->>Photo1: 첫 번째 이미지 로드 시작
+    Photo1->>UI: 로딩 UI 표시 (photo1)
+    Note over Photo1: 1.5초 대기
+    Photo1->>UI: photo1 완료 & 리렌더
+    App->>Photo2: 두 번째 이미지 로드 시작
+    Photo2->>UI: 로딩 UI 표시 (photo2)
+    Note over Photo2: 1.5초 대기
+    Photo2->>UI: photo2 완료 & 최종 렌더
+```
+
+##### 개선된 병렬 처리 방식
+```mermaid
+sequenceDiagram
+    participant App
+    participant Photos
+    participant UI
+    
+    App->>Photos: 두 이미지 동시 로드 시작
+    Photos->>UI: 로딩 UI 표시 (한 번만)
+    Note over Photos: 1.5초 대기 (병렬)
+    Photos->>UI: 모든 이미지 준비완료 & 최종 렌더
+```
+
+이러한 개선을 통해 얻을 수 있는 이점:
+1. 전체 로딩 시간이 절반으로 줄어듦 (3초 → 1.5초)
+2. 사용자는 로딩 UI를 한 번만 보게 됨
+3. 모든 컨텐츠가 준비되면 한 번에 깔끔하게 표시됨
+
+이것이 바로 Suspense의 "Render-as-You-Fetch" 패턴이 추구하는 방향이며, React 18에서 강조하는 동시성(Concurrent) 렌더링의 핵심 개념.
+
+저자가 말한 비효율적인 부분과 그 해결 방식식
+
+
 <!-- ### 4주차: Server Side Rendering
 - 참고 자료: (추후 추가 예정) -->

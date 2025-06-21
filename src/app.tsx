@@ -24,6 +24,20 @@ const React = {
   }
 };
 
+// 타입 정의
+interface ResourceCache {
+  [key: string]: string;
+}
+
+interface ResourceTasks {
+  [key: string]: () => Promise<string>;
+}
+
+interface Photos {
+  photo1: string;
+  photo2: string;
+}
+
 const reRender = () => { 
   console.log('reRender-ing :)'); 
   const rootNode = document.getElementById('myapp'); 
@@ -89,29 +103,60 @@ const useState = (initialState) => {
 // ---- 원격 API ---- // 
 const photoURL = 'https://picsum.photos/200'; 
 const getMyAwesomePic = () => { 
-  return new Promise((resolve, reject) => { 
+  return new Promise<string>((resolve, reject) => { 
     setTimeout(() => resolve(photoURL), 1500); 
   }); 
 };
 
 // Suspense를 위한 리소스 캐시 및 생성 함수
-const resourceCache = {}; 
-const createResource = (asyncTask, key) => { 
+const resourceCache: ResourceCache = {}; 
+
+// 여러 리소스를 한번에 처리하는 함수
+const createResources = (tasks: ResourceTasks): Photos => {
+  // 이미 모든 리소스가 캐시에 있는지 확인
+  const allCached = Object.keys(tasks).every(key => resourceCache[key]);
+  if (allCached) {
+    return Object.keys(tasks).reduce((acc, key) => {
+      acc[key] = resourceCache[key];
+      return acc;
+    }, {} as Photos);
+  }
+
+  // 아직 로드되지 않은 리소스가 있다면
+  const promises = Object.entries(tasks).map(([key, task]) => {
+    if (resourceCache[key]) return Promise.resolve();
+    return task().then(value => {
+      resourceCache[key] = value;
+    });
+  });
+
+  throw { 
+    promise: Promise.all(promises),
+    key: Object.keys(tasks).join(',')
+  };
+};
+
+const createResource = (asyncTask: () => Promise<string>, key: string): string => { 
   if (resourceCache[key]) return resourceCache[key]; 
-  throw { promise: asyncTask(), key };  // Promise를 throw
+  throw { promise: asyncTask(), key };
 };
 
 // ---- 애플리케이션 ---
-const Title = (props) => (
+const Title = (props: { name: string }) => (
   <h2>안녕하세요 {props.name}!</h2>
 );
 
 const App = () => { 
   const [name, setName] = useState('Arindam'); 
   const [count, setCount] = useState(0);
-  const photo1 = createResource(getMyAwesomePic, 'photo1'); 
-  const photo2 = createResource(getMyAwesomePic, 'photo2');
-return ( 
+
+  // 여러 리소스를 한번에 요청
+  const photos = createResources({
+    photo1: getMyAwesomePic,
+    photo2: getMyAwesomePic
+  });
+
+  return ( 
     <div draggable> 
       <h2>안녕하세요 {name}님!</h2> 
       <p>저는 단락입니다</p> 
@@ -124,9 +169,9 @@ return (
       <button onclick={() => setCount(count + 1)}>+1</button> 
       <button onclick={() => setCount(count - 1)}>-1</button> 
       <h2>저희 사진 앨범</h2> 
-      <img src={photo1} alt="Photo1" /> 
-      <img src={photo2} alt="Photo2" />
-     </div> 
+      <img src={photos.photo1} alt="Photo1" /> 
+      <img src={photos.photo2} alt="Photo2" />
+    </div> 
   ); 
 };
 
