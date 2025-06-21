@@ -9,8 +9,8 @@ const React = {
           resourceCache[key] = value;  // 결과를 캐시에 저장
           reRender();  // UI 다시 렌더링
         });
-        // 대체 UI 반환
-        return { tag: 'h2', props: null, children: ['이미지 로딩 중...'] };
+        // 대체 UI 반환 - 현재 로딩 중인 리소스의 key를 표시
+        return { tag: 'h2', props: null, children: [`이미지 로딩 중... (key: ${key})`] };
       }
     }
 
@@ -109,9 +109,9 @@ const Title = (props) => (
 const App = () => { 
   const [name, setName] = useState('Arindam'); 
   const [count, setCount] = useState(0);
-  const photo = createResource(getMyAwesomePic, 'photo');  // createResource 사용
-  
-  return ( 
+  const photo1 = createResource(getMyAwesomePic, 'photo1'); 
+  const photo2 = createResource(getMyAwesomePic, 'photo2');
+return ( 
     <div draggable> 
       <h2>안녕하세요 {name}님!</h2> 
       <p>저는 단락입니다</p> 
@@ -124,7 +124,8 @@ const App = () => {
       <button onclick={() => setCount(count + 1)}>+1</button> 
       <button onclick={() => setCount(count - 1)}>-1</button> 
       <h2>저희 사진 앨범</h2> 
-      <img src={photo} alt="사진" />
+      <img src={photo1} alt="Photo1" /> 
+      <img src={photo2} alt="Photo2" />
      </div> 
   ); 
 };

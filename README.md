@@ -357,5 +357,31 @@ Suspense의 철학:
 - React 팀이 권장하는 방식으로만 사용
 - Suspense와 함께 사용할 때 가장 효과적
 
+#### Suspense와 Concurrent Mode의 한계점
+현재 구현의 주요 한계점은 여러 리소스를 로드할 때 발생합니다. 예외가 발생하는 즉시 기존 VirtualDOM 렌더링을 폐기하고 폴백을 표시하는 방식은 다소 비생산적입니다. 
+
+예를 들어, 여러 이미지를 로드하는 경우:
+```jsx
+const App = () => {
+  const photo1 = createResource(getMyAwesomePic, 'photo1');
+  const photo2 = createResource(getMyAwesomePic, 'photo2');
+  
+  return (
+    <div>
+      <img src={photo1} alt="Photo1" />
+      <img src={photo2} alt="Photo2" />
+    </div>
+  );
+};
+```
+
+이 경우 다음과 같은 순차적 처리가 발생합니다:
+1. photo1 로드 시작 → 폴백 UI 표시
+2. photo1 로드 완료 → 리렌더링
+3. photo2 로드 시작 → 다시 폴백 UI 표시
+4. photo2 로드 완료 → 최종 리렌더링
+
+이상적으로는 두 리소스를 병렬로 로드하면서도 모든 리소스가 준비될 때까지 기다렸다가 한 번에 렌더링하는 것이 더 효율적일 것입니다.
+
 <!-- ### 4주차: Server Side Rendering
 - 참고 자료: (추후 추가 예정) -->
