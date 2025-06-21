@@ -1,7 +1,17 @@
 const React = {
   createElement: (tag, props, ...children) => {
     if (typeof tag === 'function') {
-      return tag(props, ...children);
+      try {
+        return tag(props, ...children);
+      } catch ({ promise, key }) {
+        // Promise가 throw되면 여기서 캐치
+        promise.then((value) => {
+          resourceCache[key] = value;  // 결과를 캐시에 저장
+          reRender();  // UI 다시 렌더링
+        });
+        // 대체 UI 반환
+        return { tag: 'h2', props: null, children: ['이미지 로딩 중...'] };
+      }
     }
 
     const el = {
@@ -14,21 +24,11 @@ const React = {
   }
 };
 
-// reRender 함수 추가
-// const reRender = () => {
-//   const rootNode = document.getElementById('myapp'); 
-//   rootNode.innerHTML = '';
-//   render(<App />, document.getElementById('myapp'));
-// };
-
 const reRender = () => { 
   console.log('reRender-ing :)'); 
   const rootNode = document.getElementById('myapp'); 
-  // 이미 렌더링된 내용을 재설정/정리 
   rootNode.innerHTML = ''; 
-  // 전역 상태 커서를 재설정: 자체 세터와 리렌더링 주기를 가진 완전히 별도의 상태를 생성
   myAppStateCursor = 0;
-   // 그런 다음 렌더링 Fresh 
   render(<App />, rootNode); 
 };
 
@@ -83,10 +83,23 @@ const useState = (initialState) => {
     reRender();
   };
   myAppStateCursor++;
-  // console.log(`stateDump`, myAppState);
   return [myAppState[stateCursor], setState];
 };
 
+// ---- 원격 API ---- // 
+const photoURL = 'https://picsum.photos/200'; 
+const getMyAwesomePic = () => { 
+  return new Promise((resolve, reject) => { 
+    setTimeout(() => resolve(photoURL), 1500); 
+  }); 
+};
+
+// Suspense를 위한 리소스 캐시 및 생성 함수
+const resourceCache = {}; 
+const createResource = (asyncTask, key) => { 
+  if (resourceCache[key]) return resourceCache[key]; 
+  throw { promise: asyncTask(), key };  // Promise를 throw
+};
 
 // ---- 애플리케이션 ---
 const Title = (props) => (
@@ -94,21 +107,25 @@ const Title = (props) => (
 );
 
 const App = () => { 
-  const [name, setName] = useState('Arindam');
+  const [name, setName] = useState('Arindam'); 
   const [count, setCount] = useState(0);
-   return ( 
+  const photo = createResource(getMyAwesomePic, 'photo');  // createResource 사용
+  
+  return ( 
     <div draggable> 
-      <h2>안녕하세요 {name} !</h2> 
+      <h2>안녕하세요 {name}님!</h2> 
       <p>저는 단락입니다</p> 
       <input 
         type="text" 
         value={name} 
-        onchange={(e) => setName(e.target.value)}
-       /> 
-       <h2> 카운터 값: {count.toString()}</h2> 
+        onchange={(e) => setName(e.target.value)} 
+      /> 
+      <h2> 카운터 값: {count}</h2> 
       <button onclick={() => setCount(count + 1)}>+1</button> 
-      <button onclick={() => setCount(count - 1)}>-1</button>
-    </div> 
+      <button onclick={() => setCount(count - 1)}>-1</button> 
+      <h2>저희 사진 앨범</h2> 
+      <img src={photo} alt="사진" />
+     </div> 
   ); 
 };
 
