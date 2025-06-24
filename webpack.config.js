@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = { //현재는 개발 모드 설정만 있음
   mode: 'development', //개발 모드 설정
-  entry: './src/index.js', //entry point(진입점), 앱이 시작되는 모든 파일 추적, 여기서부터 import된 모든 파일을 추적
+  entry: './src/index.tsx', //entry point(진입점), 앱이 시작되는 모든 파일 추적, 여기서부터 import된 모든 파일을 추적
   output: { //출력 설정. 번들링된 파일을 저장할 위치와 파일 이름 지정
     path: path.resolve(__dirname, 'dist'), //번들링된 파일을 저장할 위치
     filename: 'bundle.js', //번들링된 파일의 이름
@@ -14,12 +14,21 @@ module.exports = { //현재는 개발 모드 설정만 있음
       {
         test: /\.(js|jsx|ts|tsx)$/, //졍규표현식을 사용하여 어떤 파일들을 처리할지 지정 : 일반js, react jsx, typescript, typescript react
         exclude: /node_modules/, //처리하지 않을 파일, 디렉토리를 지정 : node_modules 폴더는 제외(이미 빌드된 파일이므로)
-        use: {//실제로 파일을 어떻게 변환할지 정의
-          loader: 'babel-loader', //babel-loader를 사용하여 파일을 변환
-          options: { //로더에 전달할 설정
-            presets: ['@babel/preset-env', '@babel/preset-react'] //babel-loader에 전달할 설정
+        use: [
+          {
+            loader: 'babel-loader', //babel-loader를 사용하여 파일을 변환
+            options: { //로더에 전달할 설정
+              presets: [
+                '@babel/preset-env',
+                '@babel/preset-react',
+                '@babel/preset-typescript'
+              ]
+            }
+          },
+          {
+            loader: 'ts-loader'
           }
-        }
+        ]
       },
       {
         test: /\.css$/, // CSS 파일을 처리하기 위한 설정
