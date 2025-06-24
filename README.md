@@ -565,40 +565,6 @@ sequenceDiagram
     Note over Client: 이벤트 핸들러 연결
 ```
 
-##### Hydration이란?
-Hydration은 서버에서 생성된 정적 HTML에 JavaScript 동작을 입히는 과정입니다. 이 과정은 다음과 같은 특징을 가집니다:
-
-1. **초기 렌더링 최적화**
-   - 서버가 데이터를 포함한 완성된 HTML 생성
-   - 클라이언트는 JS 실행 전에도 콘텐츠 표시 가능
-   - 서버-클라이언트 간 왕복 시간 감소
-
-2. **브라우저 제약 사항**
-   - 서버에는 브라우저 API가 없음 (window, document 등)
-   - 브라우저 종속적인 코드는 클라이언트에서만 실행 가능
-   - 서버와 클라이언트 간 동기화에 주의 필요
-
-3. **ReactDOM.hydrateRoot() 동작**
-   - 서버에서 생성된 HTML 구조 보존
-   - JavaScript 이벤트 핸들러만 연결
-   - 불필요한 재렌더링 방지
-
-##### 주의사항
-1. **서버-클라이언트 일치**
-   - 서버와 클라이언트의 렌더링 결과가 동일해야 함
-   - 불일치는 버그로 간주되어 수정 필요
-   - 개발 모드에서 불일치 경고 발생
-
-2. **불가피한 차이 처리**
-   ```jsx
-   // 예: 타임스탬프처럼 서버-클라이언트 간 다를 수 밖에 없는 경우
-   <div suppressHydrationWarning={true}>
-     현재 시간: {new Date().toLocaleTimeString()}
-   </div>
-   ```
-   - suppressHydrationWarning 사용은 최소화
-   - 실제로 필요한 경우에만 제한적으로 사용
-
 ##### Hydration의 이점
 1. **성능 최적화**
    - 빠른 초기 페이지 로드
@@ -609,6 +575,61 @@ Hydration은 서버에서 생성된 정적 HTML에 JavaScript 동작을 입히�
    - 서버 자원 효율적 사용
    - 클라이언트 부하 분산
    - 네트워크 트래픽 최적화
+
+##### BrowserRouter와 History API를 활용한 SPA 구현
+React Router의 BrowserRouter는 브라우저의 History API를 활용하여 클라이언트 사이드 라우팅을 구현합니다.
+
+1. **History API의 역할**
+   ```javascript
+   // History API 예시
+   window.history.pushState({}, '', '/about');  // URL 변경
+   window.history.back();                       // 뒤로 가기
+   window.history.forward();                    // 앞으로 가기
+   ```
+   - 브라우저의 세션 기록(방문 이력) 조작
+   - URL 변경 시 페이지 새로고침 방지
+   - 브라우저 네비게이션(뒤로 가기/앞으로 가기) 지원
+
+2. **BrowserRouter의 동작 방식**
+   ```jsx
+   // 클라이언트 측 라우팅 설정
+   <BrowserRouter>
+     <Routes>
+       <Route path="/" element={<Home />} />
+       <Route path="/about" element={<About />} />
+     </Routes>
+   </BrowserRouter>
+   ```
+   - Link 클릭 → History API로 URL 변경
+   - URL 변경 감지 → 해당 컴포넌트 렌더링
+   - 페이지 상태 유지 (새로고침 없음)
+
+3. **SSR과의 통합**
+   ```jsx
+   // 서버 측
+   <StaticRouter location={req.url}>
+     <App />
+   </StaticRouter>
+
+   // 클라이언트 측
+   hydrateRoot(
+     document.getElementById('root')!,
+     <BrowserRouter>
+       <App />
+     </BrowserRouter>
+   );
+   ```
+   - 서버: StaticRouter로 초기 HTML 생성
+   - 클라이언트: BrowserRouter로 이벤트 처리
+   - Hydration 후 완전한 SPA 동작
+
+4. **장점**
+   - 부드러운 페이지 전환
+   - 서버 부하 감소 (필요한 데이터만 요청)
+   - 앱과 같은 사용자 경험
+   - 브라우저 히스토리 완벽 지원
+
+이러한 방식으로 SSR의 빠른 초기 로딩과 SPA의 동적인 페이지 전환을 모두 활용할 수 있습니다.
 
 #### SSR을 위한 앱 설치 과정
 
@@ -811,6 +832,42 @@ study-react-from-scratch-hoco/
    - TypeScript 지원 추가
 
 이러한 변경사항들은 모던 React 애플리케이션의 SSR 구현을 위한 기본 토대를 제공합니다. 다음 단계에서는 이 설정을 기반으로 실제 SSR 로직을 구현할 예정입니다.
+
+### React SSR 구현 방식과 권장사항
+
+이번 학습에서는 `react-dom/server`를 사용하여 직접 SSR을 구현해보았지만, 실제 프로덕션 환경에서는 이 방식이 권장되지 않습니다.
+
+#### React의 기본 렌더링 방식
+React는 기본적으로 클라이언트 사이드 렌더링(CSR) 라이브러리입니다. React 팀은 SSR이 필요한 경우 다음과 같은 프레임워크 사용을 권장합니다:
+
+- Next.js
+- Remix
+- Gatsby
+
+#### 프레임워크 사용을 권장하는 이유
+
+1. **복잡성 관리**
+   - SSR 구현에는 많은 엣지 케이스와 고려사항이 존재
+   - 데이터 페칭, 상태 관리, 라우팅 등 복잡한 문제들을 프레임워크가 해결
+   - 직접 구현 시 발생할 수 있는 성능, 보안 이슈 예방
+
+2. **최적화된 기능**
+   - 자동 코드 분할 (Code Splitting)
+   - 이미지 최적화
+   - 성능 최적화
+   - 개발 환경 설정
+
+3. **유지보수**
+   - 프레임워크 팀의 지속적인 업데이트와 버그 수정
+   - 커뮤니티 지원
+   - 검증된 솔루션 사용
+
+4. **개발 생산성**
+   - 미리 구축된 기능들로 빠른 개발 가능
+   - 표준화된 프로젝트 구조
+   - 명확한 베스트 프랙티스
+
+따라서 실제 프로젝트에서 SSR이 필요한 경우, Next.js와 같은 프레임워크를 사용하는 것이 더 안전하고 효율적인 선택이 될 수 있습니다.
 
 
 
