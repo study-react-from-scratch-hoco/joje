@@ -46,7 +46,7 @@ module.exports = { //현재는 개발 모드 설정만 있음
   ],
   devServer: { //개발 서버 설정. 브라우저에서 실행되는 개발 서버 설정   
     historyApiFallback: true, //브라우저 라우팅 오류 처리
-    port: 3000, //포트 3000번
+    port: 3001, //포트 3001번
     hot: true //Hot Module Replacement 활성화
   }
 }; 

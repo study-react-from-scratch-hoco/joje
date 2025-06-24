@@ -1,5 +1,5 @@
 import React from 'react';
 
-export const Articles: React.FC = () => {
-  return <h1>기사</h1>;
+export const Articles = () => {
+  return <h1>게시글</h1>;
 }; 

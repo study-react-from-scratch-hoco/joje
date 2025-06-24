@@ -1,39 +1,32 @@
 import express from 'express';
 import path from 'path';
 import React from 'react';
-import { renderToString } from 'react-dom/server';
-import { StaticRouter } from 'react-router-dom/server';
-import App from './src/app';
+import render, { sheet } from './src/index.server';
+import { readFileSync } from 'fs';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const templateFile = path.resolve(__dirname, 'index.html');
+const templateHTML = readFileSync(templateFile, 'utf-8');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// 서버 사이드 렌더링
-app.get('*', (req, res) => {
-  const context = {};
-  const reactApp = renderToString(
-    <StaticRouter location={req.url}>
-      <App />
-    </StaticRouter>
-  );
+app.get('/*', (req, res) => {
+  try {
+    const reactApp = render(req.url);
+    const styles = sheet.getStyleTags();
+    const response = templateHTML
+      .replace('<div id="root"></div>', `<div id="root">${reactApp}</div>`)
+      .replace('</head>', `${styles}</head>`);
 
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>React SSR</title>
-      </head>
-      <body>
-        <div id="root">${reactApp}</div>
-        <script src="/bundle.js"></script>
-      </body>
-    </html>
-  `);
+    sheet.seal();
+    return res.send(response);
+  } catch (error) {
+    console.error('Error during rendering:', error);
+    return res.status(500).send('Internal Server Error');
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`서버가 포트 ${PORT}에서 실행 중입니다`);
+app.listen(3000, () => {
+  console.log('서버가 실행 중입니다');
 }); 

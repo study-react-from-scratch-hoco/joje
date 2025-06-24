@@ -1,5 +1,5 @@
 import React from 'react';
 
-export const About: React.FC = () => {
-  return <h1>정보</h1>;
+export const About = () => {
+  return <h1>소개</h1>;
 }; 
