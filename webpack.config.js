@@ -20,6 +20,10 @@ module.exports = { //현재는 개발 모드 설정만 있음
             presets: ['@babel/preset-env', '@babel/preset-react'] //babel-loader에 전달할 설정
           }
         }
+      },
+      {
+        test: /\.css$/, // CSS 파일을 처리하기 위한 설정
+        use: ['style-loader', 'css-loader'] // style-loader와 css-loader를 사용
       }
     ]
   },
