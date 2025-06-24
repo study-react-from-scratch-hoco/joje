@@ -1173,4 +1173,37 @@ SSR 환경에서 주의해야 할 주요 브라우저 전역 객체들:
    - 서버 렌더링 시 기본 콘텐츠 제공
    - 클라이언트에서 점진적 기능 향상
 
+### 실행방법
 
+1. **프로젝트 클론**
+   ```bash
+   git clone https://github.com/your-username/study-react-from-scratch-hoco.git
+   cd study-react-from-scratch-hoco
+   ```
+
+2. **의존성 설치**
+   ```bash
+   npm install
+   ```
+
+3. **개발 모드 실행**
+   ```bash
+   # 터미널 1: 클라이언트 개발 서버 실행
+   npm run dev
+
+   # 터미널 2: SSR 서버 실행
+   npm run server
+   ```
+
+4. **브라우저에서 확인**
+   - 클라이언트: http://localhost:8080
+   - SSR: http://localhost:3000
+
+5. **빌드 및 프로덕션 실행**
+   ```bash
+   # 프로덕션 빌드
+   npm run build
+
+   # SSR 서버 실행
+   npm start
+   ```
