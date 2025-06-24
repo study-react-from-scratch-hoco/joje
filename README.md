@@ -431,7 +431,386 @@ SPA의 경우에는 어떻게 렌더링 하느냐가 상당히 중요한걸로 �
 Suspense를 활용해 모든 데이터를 병렬로 가져오면서 한번에 렌더링하는 방식의 차이,
 그리고 각 방식이 어떤 상황에서 더 효율적일 수 있는지 이해하게 된 것이 가장 큰 소득이었어요.
 
+### 4주차: Server Side Rendering (SSR)
+- 참고 자료: [Let's build a React from scratch: Part 4— Server Side Rendering and its Challenges](https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-4-server-side-rendering-and-its-challenges-b7b87c84bbf)
+
+#### SSR(Server Side Rendering)의 이해
+
+##### 클라이언트 사이드 렌더링 (CSR)
+```mermaid
+sequenceDiagram
+    participant Client as 브라우저
+    participant Server as 서버
+    
+    Client->>Server: 페이지 요청
+    Server->>Client: JS 번들 전송
+    Note over Client: JS 다운로드
+    Note over Client: JS 파싱/실행
+    Note over Client: DOM 생성 및 렌더링
+```
+
+##### 서버 사이드 렌더링 (SSR)
+```mermaid
+sequenceDiagram
+    participant Client as 브라우저
+    participant Server as 서버
+    
+    Client->>Server: 페이지 요청
+    Note over Server: HTML 생성
+    Server->>Client: 완성된 HTML 전송
+    Note over Client: 즉시 렌더링
+    Note over Client: JS 로드 및 이벤트 연결
+```
+
+##### CSR vs SSR 비교
+| 특성 | CSR (Client Side Rendering) | SSR (Server Side Rendering) |
+|------|---------------------------|---------------------------|
+| HTML 생성 위치 | 브라우저 | 서버 |
+| 초기 로딩 | JS 다운로드/파싱 후 | 즉시 표시 |
+| 서버 부하 | 낮음 | 높음 |
+| SEO | 상대적으로 불리 | 유리 |
+| 사용자 경험 | 초기 로딩 후 빠른 전환 | 빠른 초기 로딩 |
+
+##### SSR의 장점
+1. **빠른 초기 로딩**
+   - JavaScript 파싱/실행을 기다리지 않고 즉시 콘텐츠 표시
+   - 사용자가 빠르게 콘텐츠를 볼 수 있음
+
+2. **향상된 SEO**
+   - 검색 엔진 크롤러가 완성된 HTML을 바로 분석 가능
+   - 더 나은 검색 엔진 색인화
+
+##### SSR의 주의점
+- 서버 부하 증가
+- 트래픽 증가에 따른 서버 성능 요구사항 증가
+- 적절한 캐싱과 성능 최적화 필요
+
+##### CSR vs SSR 상세 비교
+
+###### 클라이언트 사이드 렌더링(CSR)의 과정:
+```mermaid
+sequenceDiagram
+    participant User as 사용자
+    participant Browser as 브라우저
+    participant Server as 서버
+    
+    User->>Browser: 페이지 접속
+    Browser->>Server: 페이지 요청
+    Server->>Browser: 빈 HTML + JS 번들
+    Note over Browser: JS 다운로드 중...(시간 소요)
+    Note over Browser: JS 파싱/실행 중...(시간 소요)
+    Note over Browser: DOM 생성 중...(시간 소요)
+    Browser->>User: 화면 표시
+```
+
+1. 브라우저가 서버에 요청
+2. 서버는 빈 HTML과 JavaScript 번들을 전송
+3. 브라우저가 JavaScript를 다운로드
+4. JavaScript를 파싱하고 실행
+5. JavaScript가 DOM을 생성하고 화면에 렌더링
+
+###### 서버 사이드 렌더링(SSR)의 과정:
+```mermaid
+sequenceDiagram
+    participant User as 사용자
+    participant Browser as 브라우저
+    participant Server as 서버
+    
+    User->>Browser: 페이지 접속
+    Browser->>Server: 페이지 요청
+    Note over Server: HTML 생성 (서버에서 처리)
+    Server->>Browser: 완성된 HTML
+    Browser->>User: 즉시 화면 표시
+    Note over Browser: JS 로드 (백그라운드)
+```
+
+1. 브라우저가 서버에 요청
+2. 서버가 HTML을 미리 생성
+3. 서버가 완성된 HTML을 브라우저로 전송
+4. 브라우저가 HTML을 즉시 표시
+5. 그 후 JavaScript를 로드하여 이벤트 핸들러 등을 연결(hydration)
+
+##### 주요 차이점
+1. **초기 로딩 시간**
+   - CSR: JS 다운로드 + 파싱 + 실행 시간이 필요
+   - SSR: HTML을 받자마자 바로 표시 가능
+
+2. **서버 부하**
+   - CSR: 서버는 단순히 파일만 전송
+   - SSR: 서버가 HTML 생성 작업을 수행
+
+3. **사용자 경험**
+   - CSR: 초기 로딩은 느리지만, 이후 페이지 전환이 빠름
+   - SSR: 초기 콘텐츠를 빠르게 볼 수 있음
+
+SSR이 "First Contentful Paint" (첫 콘텐츠가 표시되는 시간)에서 유리한 이유는 JavaScript의 다운로드, 파싱, 실행 과정이 필요 없기 때문입니다. 이는 특히 다음과 같은 상황에서 더 큰 장점이 됩니다:
+- 느린 네트워크 환경
+- 성능이 낮은 기기
+- 초기 로딩 속도가 중요한 경우
+- SEO가 중요한 경우
+
+#### SSR의 작동 방식: Hydration
+```mermaid
+sequenceDiagram
+    participant Client as 브라우저
+    participant Server as 서버
+    participant Data as 데이터
+    
+    Server->>Data: 데이터 요청
+    Data->>Server: 데이터 응답
+    Note over Server: HTML 생성
+    Server->>Client: HTML + JS 번들 전송
+    Note over Client: HTML 즉시 표시
+    Note over Client: JS 로드 및 Hydration
+    Note over Client: 이벤트 핸들러 연결
+```
+
+##### Hydration이란?
+Hydration은 서버에서 생성된 정적 HTML에 JavaScript 동작을 입히는 과정입니다. 이 과정은 다음과 같은 특징을 가집니다:
+
+1. **초기 렌더링 최적화**
+   - 서버가 데이터를 포함한 완성된 HTML 생성
+   - 클라이언트는 JS 실행 전에도 콘텐츠 표시 가능
+   - 서버-클라이언트 간 왕복 시간 감소
+
+2. **브라우저 제약 사항**
+   - 서버에는 브라우저 API가 없음 (window, document 등)
+   - 브라우저 종속적인 코드는 클라이언트에서만 실행 가능
+   - 서버와 클라이언트 간 동기화에 주의 필요
+
+3. **ReactDOM.hydrateRoot() 동작**
+   - 서버에서 생성된 HTML 구조 보존
+   - JavaScript 이벤트 핸들러만 연결
+   - 불필요한 재렌더링 방지
+
+##### 주의사항
+1. **서버-클라이언트 일치**
+   - 서버와 클라이언트의 렌더링 결과가 동일해야 함
+   - 불일치는 버그로 간주되어 수정 필요
+   - 개발 모드에서 불일치 경고 발생
+
+2. **불가피한 차이 처리**
+   ```jsx
+   // 예: 타임스탬프처럼 서버-클라이언트 간 다를 수 밖에 없는 경우
+   <div suppressHydrationWarning={true}>
+     현재 시간: {new Date().toLocaleTimeString()}
+   </div>
+   ```
+   - suppressHydrationWarning 사용은 최소화
+   - 실제로 필요한 경우에만 제한적으로 사용
+
+##### Hydration의 이점
+1. **성능 최적화**
+   - 빠른 초기 페이지 로드
+   - 점진적인 JavaScript 기능 활성화
+   - 사용자 경험 향상
+
+2. **리소스 효율성**
+   - 서버 자원 효율적 사용
+   - 클라이언트 부하 분산
+   - 네트워크 트래픽 최적화
+
+#### SSR을 위한 앱 설치 과정
+
+##### 1. 필요한 패키지 설치
+```bash
+# 기본 의존성 설치
+npm install express react react-dom react-router-dom
+
+# 개발 의존성 설치
+npm install --save-dev webpack webpack-cli webpack-dev-server babel-loader @babel/core @babel/preset-react @babel/preset-env html-webpack-plugin
+```
+
+##### 2. 서버 설정 (server.js)
+```javascript
+const express = require('express');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// 정적 파일 제공
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// 모든 요청을 index.html로 라우팅
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+```
+
+##### 3. Webpack 설정 (webpack.config.js)
+```javascript
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+module.exports = {
+  mode: 'development',
+  entry: './src/index.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js',
+    publicPath: '/',
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx|ts|tsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react']
+          }
+        }
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx']
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './index.html'
+    })
+  ],
+  devServer: {
+    historyApiFallback: true,
+    port: 3000,
+    hot: true
+  }
+};
+```
+
+##### 4. HTML 템플릿 (index.html)
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React SSR Study</title>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
+```
+
+##### 5. React 진입점 (src/index.js)
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
+```
+
+##### 6. 스크립트 설정 (package.json)
+```json
+{
+  "scripts": {
+    "start": "node server.js",
+    "dev": "webpack serve --mode development --open",
+    "build": "webpack --mode production"
+  },
+  "dependencies": {
+    "express": "^4.18.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^6.22.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "@babel/preset-react": "^7.23.3",
+    "babel-loader": "^9.1.3",
+    "html-webpack-plugin": "^5.6.0",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.2"
+  }
+}
+```
+
+##### 프로젝트 구조
+```
+study-react-from-scratch-hoco/
+├── src/
+│   └── index.js
+├── index.html
+├── server.js
+├── webpack.config.js
+├── package.json
+└── package-lock.json
+```
+
+##### 설정 설명
+1. **서버 설정 (server.js)**
+   - Express 서버를 사용하여 정적 파일 제공
+   - 모든 라우트를 index.html로 리다이렉트 (SPA 지원)
+   - 기본 포트 3000 사용
+
+2. **Webpack 설정 (webpack.config.js)**
+   - JavaScript/TypeScript 파일 처리를 위한 바벨 설정
+   - HMR(Hot Module Replacement) 지원
+   - HTML 템플릿 플러그인 사용
+   - 개발 서버 설정
+
+3. **앱 실행 방법**
+   ```bash
+   # 개발 모드 실행
+   npm run dev
+
+   # 프로덕션 빌드
+   npm run build
+
+   # 서버 실행
+   npm start
+   ```
+
+이 설정은 React 앱의 SSR을 위한 기본적인 환경을 제공합니다. 다음 단계에서는 실제 SSR 구현과 Hydration 과정을 다룰 예정입니다.
+
+#### SSR 관련 파일 상세 설명 - package.json 주요 변경사항
+- **스크립트 명령어**
+  - `start`: Express 서버 실행
+  - `dev`: 웹팩 개발 서버 실행 (HMR 지원)
+  - `build`: 프로덕션용 빌드 생성
+
+- **새로운 의존성**
+  - `express`: SSR을 위한 서버
+  - `react-router-dom`: 클라이언트/서버 라우팅
+  - 웹팩 관련: 빌드 도구 체인
+  - 바벨 관련: JSX 및 최신 JavaScript 지원
+
+##### 주요 변경사항 요약
+1. **서버 측 변경**
+   - Express 서버 추가로 SSR 지원
+   - 정적 파일 서빙 및 SPA 라우팅 처리
+
+2. **클라이언트 측 변경**
+   - React 18 기능 활용
+   - 클라이언트 사이드 라우팅 설정
+   - 웹팩 기반 빌드 시스템 구축
+
+3. **개발 환경 개선**
+   - HMR을 통한 빠른 개발 가능
+   - 프로덕션 빌드 최적화
+   - TypeScript 지원 추가
+
+이러한 변경사항들은 모던 React 애플리케이션의 SSR 구현을 위한 기본 토대를 제공합니다. 다음 단계에서는 이 설정을 기반으로 실제 SSR 로직을 구현할 예정입니다.
 
 
-<!-- ### 4주차: Server Side Rendering
-- 참고 자료: (추후 추가 예정) -->
+
