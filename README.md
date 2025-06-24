@@ -1107,6 +1107,70 @@ sequenceDiagram
 
 
 ##### 4. SSR에서 전역 객체 다루기
-브라우저 전역 객체 사용 시 발생하는 문제와 해결 방법에 대해 다룹니다. 이는 추후 구현 예정입니다.
+
+서버 사이드 렌더링(SSR) 환경에서는 브라우저의 전역 객체들을 직접 사용할 수 없습니다. 이는 서버에서 렌더링이 이루어질 때 이러한 객체들이 존재하지 않기 때문입니다.
+
+###### 브라우저 전역 객체들
+
+SSR 환경에서 주의해야 할 주요 브라우저 전역 객체들:
+
+1. **window**
+   - 브라우저의 전역 객체
+   - `window.innerWidth`, `window.innerHeight` 등 브라우저 창 관련 정보
+   - `setTimeout`, `setInterval` 등의 타이머 함수
+   - `addEventListener`, `removeEventListener` 등의 이벤트 처리
+
+2. **document**
+   - DOM 조작 관련 메서드들
+   - `querySelector`, `getElementById` 등 요소 선택
+   - `createElement`, `appendChild` 등 요소 생성 및 수정
+
+3. **navigator**
+   - 브라우저 정보
+   - `userAgent`, `language` 등 브라우저/사용자 환경 정보
+   - `geolocation` 등의 브라우저 API
+
+4. **localStorage / sessionStorage**
+   - 클라이언트 측 데이터 저장소
+   - 영구 저장소와 세션 저장소
+
+5. **location**
+   - URL 관련 정보
+   - `href`, `pathname`, `search` 등 현재 페이지 URL 정보
+   - 페이지 이동 관련 메서드들
+
+###### 구현된 해결 방안
+
+1. **환경 구분 유틸리티 (`isClient.ts`)**
+   ```typescript
+   export const isClient = typeof window !== 'undefined';
+   ```
+   - 서버/클라이언트 환경을 명확하게 구분
+   - 조건부로 브라우저 API 사용 가능
+
+2. **클라이언트 전용 컴포넌트 (`ClientOnly.tsx`)**
+   - 브라우저 API를 사용하는 컴포넌트를 클라이언트에서만 렌더링
+   - 서버에서는 대체 UI(폴백) 표시 가능
+
+3. **안전한 훅 구현 (`useWindowSize.ts`)**
+   - 서버에서는 기본값 사용
+   - 클라이언트에서만 실제 브라우저 API 호출
+   - 컴포넌트 라이프사이클에 맞춘 이벤트 처리
+
+###### 이 방식의 장점
+
+1. **코드 분리**
+   - 서버/클라이언트 코드가 깔끔하게 분리됨
+   - 각 환경에 맞는 적절한 처리 가능
+
+2. **안정성**
+   - 하이드레이션 불일치 방지
+   - 런타임 에러 예방
+   - 클라이언트 사이드 기능을 안전하게 사용 가능
+
+3. **사용자 경험**
+   - 폴백 UI를 통한 자연스러운 전환
+   - 서버 렌더링 시 기본 콘텐츠 제공
+   - 클라이언트에서 점진적 기능 향상
 
 

@@ -2,6 +2,8 @@ import React, { Suspense } from 'react';
 import styled from 'styled-components';
 import { UserWithPosts } from '../types';
 import { fetchUserWithPosts } from '../api';
+import { ClientOnly } from '../components/ClientOnly';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 const Title = styled.h1`
   color: green;
@@ -63,10 +65,24 @@ function use<T>(promise: PromiseWithStatus<T>): T {
   }
 }
 
+const WindowSizeDisplay = () => {
+  const { width, height } = useWindowSize();
+  return (
+    <div>
+      <h2>브라우저 크기:</h2>
+      <p>너비: {width}px</p>
+      <p>높이: {height}px</p>
+    </div>
+  );
+};
+
 export default function Home() {
   return (
-    <Suspense fallback={<div>Loading home data...</div>}>
-      <HomeContent />
-    </Suspense>
+    <div>
+      <h1>홈페이지</h1>
+      <ClientOnly fallback={<div>브라우저 크기 측정 중...</div>}>
+        <WindowSizeDisplay />
+      </ClientOnly>
+    </div>
   );
 } 
