@@ -1,56 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
+import { UserWithPosts } from '../types';
+import { fetchUserWithPosts } from '../api';
 
 const Title = styled.h1`
   color: green;
   font-size: 3rem;
 `;
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-// 서버와 클라이언트 모두에서 사용할 데이터 페칭 함수
-export const fetchUserData = async (): Promise<User> => {
-  // 실제로는 API 호출을 하겠지만, 예제를 위해 가짜 데이터를 반환
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: 1,
-        name: "John Doe",
-        email: "john@example.com"
-      });
-    }, 1000);
-  });
-};
+const PostCard = styled.div`
+  border: 1px solid #ddd;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+`;
 
 // 전역 객체 타입 확장
 declare global {
   interface Window {
     __INITIAL_DATA__?: {
-      userData: User;
+      userWithPosts: UserWithPosts;
     };
   }
 }
 
 export const Home = () => {
   // 서버에서 전달받은 초기 데이터가 있으면 사용
-  const initialData = typeof window !== 'undefined' ? window.__INITIAL_DATA__?.userData : null;
-  const [user, setUser] = useState<User | null>(initialData || null);
+  const initialData = typeof window !== 'undefined' ? window.__INITIAL_DATA__?.userWithPosts : null;
+  const [userData, setUserData] = useState<UserWithPosts | null>(initialData || null);
   const [loading, setLoading] = useState(!initialData);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // 초기 데이터가 없을 때만 데이터를 가져옴
     if (!initialData) {
-      fetchUserData()
+      fetchUserWithPosts(1)  // userId 1을 가진 사용자의 데이터를 가져옴
         .then(data => {
-          setUser(data);
+          setUserData(data);
           setLoading(false);
         })
         .catch(error => {
-          console.error('Failed to fetch user:', error);
+          console.error('Failed to fetch user data:', error);
           setLoading(false);
         });
     }
@@ -63,11 +52,19 @@ export const Home = () => {
   return (
     <div>
       <Title>Home</Title>
-      {user && (
+      {userData && (
         <div>
           <h2>User Info:</h2>
-          <p>Name: {user.name}</p>
-          <p>Email: {user.email}</p>
+          <p>Name: {userData.name}</p>
+          <p>Email: {userData.email}</p>
+          
+          <h3>User Posts:</h3>
+          {userData.posts.map(post => (
+            <PostCard key={post.id}>
+              <h4>{post.title}</h4>
+              <p>{post.content}</p>
+            </PostCard>
+          ))}
         </div>
       )}
     </div>

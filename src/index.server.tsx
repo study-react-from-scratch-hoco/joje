@@ -3,18 +3,18 @@ import ReactDOMServer from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { ServerStyleSheet } from 'styled-components';
 import App from './app';
-import { fetchUserData } from './Pages/Home';
+import { fetchUserWithPosts } from './api';
 
 export const sheet = new ServerStyleSheet();
 
 export default async function render(url: string) {
   try {
-    // 서버에서 데이터를 미리 가져옴
-    const userData = await fetchUserData();
+    // 서버에서 중첩된 데이터를 미리 가져옴
+    const userWithPosts = await fetchUserWithPosts(1);  // userId 1을 가진 사용자의 데이터
     
     // 전역 객체에 초기 데이터를 설정
     const initialData = {
-      userData
+      userWithPosts
     };
 
     // 4. 렌더링된 컴포넌트를 문자열로 변환
