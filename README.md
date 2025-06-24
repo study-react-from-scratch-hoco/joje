@@ -869,5 +869,96 @@ React는 기본적으로 클라이언트 사이드 렌더링(CSR) 라이브러�
 
 따라서 실제 프로젝트에서 SSR이 필요한 경우, Next.js와 같은 프레임워크를 사용하는 것이 더 안전하고 효율적인 선택이 될 수 있습니다.
 
+// ... existing code ...
 
+#### SSR에 대해 좀 더 심도있게 다루기
+
+##### 1. SSR에서의 데이터 로딩 과제 (useEffect 훅 사전 로딩)
+
+###### 문제점
+일반적인 React(CSR)에서는 데이터 로딩을 다음과 같이 처리합니다:
+```javascript
+const Component = () => {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    // 컴포넌트 마운트 후 데이터 로딩
+    fetch('/api/data').then(data => setData(data));
+  }, []);
+
+  return <div>{data ? data : "로딩 중..."}</div>;
+}
+```
+하지만 SSR에서는 useEffect가 서버에서 실행되지 않기 때문에 (서버에는 라이프사이클이 없음), 초기 HTML에는 항상 "로딩 중..." 상태만 포함됩니다.
+
+###### 해결 방법
+서버에서 미리 데이터를 가져와 HTML에 포함시키는 방식을 사용합니다:
+
+1. **서버 사이드 렌더링 시:**
+```javascript
+// 서버 코드
+async function render() {
+  // 1. 데이터를 미리 가져옴
+  const data = await fetchData();
+  
+  // 2. 데이터를 전역 객체에 포함할 스크립트 생성
+  const dataScript = `
+    <script>
+      window.__INITIAL_DATA__ = ${JSON.stringify(data)};
+    </script>
+  `;
+  
+  // 3. React 컴포넌트 렌더링
+  const html = ReactDOMServer.renderToString(<App />);
+  
+  return { html, dataScript };
+}
+```
+
+2. **클라이언트 사이드 컴포넌트:**
+```javascript
+const Component = () => {
+  // 4. 서버에서 주입한 데이터를 초기값으로 사용
+  const initialData = window.__INITIAL_DATA__ || null;
+  const [data, setData] = useState(initialData);
+
+  useEffect(() => {
+    // 5. 서버 데이터가 없을 때만 fetch
+    if (!initialData) {
+      fetchData().then(data => setData(data));
+    }
+  }, [initialData]);
+
+  return <div>{data}</div>;
+}
+```
+
+###### 장점
+1. 초기 페이지 로드 시 데이터가 이미 포함되어 있음
+2. 로딩 상태를 보여주지 않아도 됨
+3. 불필요한 API 호출 방지
+
+###### Next.js의 해결방식
+Next.js는 이 문제를 `getServerSideProps`라는 특별한 함수로 해결합니다:
+```javascript
+// pages/index.js
+export async function getServerSideProps() {
+  const data = await fetchData();
+  return { props: { data } };
+}
+
+export default function Page({ data }) {
+  // 데이터가 이미 props로 전달됨
+  return <div>{data}</div>;
+}
+```
+
+##### 2. 중첩/종속 데이터 로딩 (멀티 패스 렌더링)
+데이터가 계층적으로 의존성을 가질 때 발생하는 문제입니다. 예를 들어, 사용자 정보를 먼저 가져와야 그 사용자의 게시물을 가져올 수 있는 경우입니다. 이는 다음 섹션에서 자세히 다루겠습니다.
+
+##### 3. React 18의 스트리밍 하이드레이션
+React 18에서 도입된 Suspense를 사용한 스트리밍 SSR 기능에 대해 다룹니다. 이는 추후 구현 예정입니다.
+
+##### 4. SSR에서 전역 객체 다루기
+브라우저 전역 객체 사용 시 발생하는 문제와 해결 방법에 대해 다룹니다. 이는 추후 구현 예정입니다.
 
