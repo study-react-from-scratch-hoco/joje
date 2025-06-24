@@ -1,5 +1,5 @@
 import React from 'react';
 
-export const Articles = () => {
-  return <h1>게시글</h1>;
-}; 
+export default function Articles() {
+  return <h1>Articles</h1>;
+} 

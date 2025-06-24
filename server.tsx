@@ -1,40 +1,66 @@
 import express from 'express';
-import path from 'path';
 import React from 'react';
-import render, { sheet } from './src/index.server';
+import { renderToPipeableStream } from 'react-dom/server';
+import { StaticRouter } from 'react-router-dom/server';
+import App from './src/app';
 import { readFileSync } from 'fs';
+import path from 'path';
 
 const app = express();
-const templateFile = path.resolve(__dirname, 'index.html');
-const templateHTML = readFileSync(templateFile, 'utf-8');
+const templateHTML = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>React SSR</title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+`;
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // 1. 클라이언트가 요청을 보내면
-app.get('/*', async (req, res) => {
-  try {
-    // 2. React 컴포넌트를 HTML 문자열로 변환하고 초기 데이터를 가져옴
-    const { app: reactApp, dataScript } = await render(req.url);
-    
-    // 3. styled-components의 스타일을 추출
-    const styles = sheet.getStyleTags();
-    
-    // 4. HTML 템플릿에 렌더링된 컴포넌트와 스타일을 삽입
-    const response = templateHTML
-      .replace('<div id="root"></div>', `<div id="root">${reactApp}</div>`)
-      .replace('</head>', `${styles}${dataScript}</head>`);
+app.get('/*', (req, res) => {
+  res.socket?.on('error', error => {
+    console.error('Fatal', error);
+  });
+  
+  let didError = false;
 
-    sheet.seal();
-    
-    // 5. 완성된 HTML을 클라이언트로 전송
-    return res.send(response);
-  } catch (error) {
-    console.error('Error during rendering:', error);
-    return res.status(500).send('Internal Server Error');
-  }
+  const stream = renderToPipeableStream(
+    <React.StrictMode>
+      <StaticRouter location={req.url}>
+        <App />
+      </StaticRouter>
+    </React.StrictMode>,
+    {
+      bootstrapScripts: ['/client.js'],
+      onShellReady() {
+        res.statusCode = didError ? 500 : 200;
+        res.setHeader('Content-type', 'text/html');
+        res.write('<!DOCTYPE html><html><head><title>React SSR</title>');
+        res.write('</head><body><div id="root">');
+        stream.pipe(res);
+        res.write('</div><script src="/client.js"></script></body></html>');
+      },
+      onShellError(error: Error) {
+        didError = true;
+        console.error('Shell Error:', error);
+        res.statusCode = 500;
+        res.send('<!doctype html><h1>Error</h1><pre>' + error.stack + '</pre>');
+      },
+      onError(error: Error) {
+        didError = true;
+        console.error('Error:', error);
+      },
+    }
+  );
 });
 
 app.listen(3000, () => {
-  console.log('서버가 실행 중입니다');
+  console.log('Server is running on http://localhost:3000');
 }); 
